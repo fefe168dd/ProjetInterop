@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  php-web:
+    build: .
+    container_name: php_meteo
+    ports:
+      - "8080:80"  
+    volumes:
+      - ./:/var/www/html
