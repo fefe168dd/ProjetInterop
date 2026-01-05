@@ -22,7 +22,6 @@
         <div class="meteo-jour">
             <!-- MATIN -->
              <div class="meteo-card">
-
             <h3>Matin</h3>
             <xsl:variable name="matin" select="echeance[@hour &lt;= 11]"/>
 

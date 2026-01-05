@@ -3,7 +3,7 @@
 define('NANCY_LAT', 48.6921);
 define('NANCY_LON', 6.1844);
 define('IUT_CHARLEMAGNE_ADDRESS', '2 ter boulevard Charlemagne, 54000 Nancy');
-define('apikey','41064487fd0d4bf0ac3195501260301');
+define('apikey','3ba9a48527f6403e96c3fdbab9b4d4cb');
 
 
 function getClientIP() {
@@ -20,18 +20,16 @@ function getClientIP() {
 
 function geolocateIP($ip) {
 
-    $url = "http://ip-api.com/json/{$ip}?fields=status,message,country,city,lat,lon";
-    
-
+    $url = "https://ipwho.is/{$ip}";
     
     $response = file_get_contents($url);
     $data = json_decode($response, true);
-    if ($data['status'] === 'success') {
+if ($data && isset($data['success']) && $data['success'] === true) {
         return [
             'country' => $data['country'],
             'city' => $data['city'],
-            'lat' => $data['lat'],
-            'lon' => $data['lon']
+            'lat' => $data['latitude'],
+            'lon' => $data['longitude']
         ];
     } else {
         return null;
@@ -59,52 +57,89 @@ function isNancy($lat, $lon) {
 }
 
 function getWeather($lat, $lon) {
-
-    
-
-$url = "https://api.openweathermap.org/data/2.5/weather"
+    $url = "https://api.weatherbit.io/v2.0/current"
          . "?lat={$lat}"
          . "&lon={$lon}"
-         . "&units=metric"
          . "&lang=fr"
-         . "&appid=" . apikey;
+         . "&key=" . apikey;
 
     $response = file_get_contents($url);
+    if ($response === false) return null;
+
     $data = json_decode($response, true);
 
-    if (!empty($data) && isset($data['main'])) {
+    // Vérifie que data[0] existe
+    if (!empty($data['data'][0])) {
+        $w = $data['data'][0];
         return [
-            'ville' => $data['name'],
-            'temperature' => $data['main']['temp'],
-            'description' => $data['weather'][0]['description'],
-            'vent' => $data['wind']['speed'],
-            'pluie'=> $data['rain'] ['1h'],
-            'neige'=>$data['snow'] ['1h']
+            'ville' => $w['city_name'] ?? 'Nancy',
+            'temperature' => $w['temp'] ?? 0,
+            'description' => $w['weather']['description'] ?? '',
+            'vent' => $w['wind_spd'] ?? 0,
+            'pluie' => $w['precip'] ?? 0,
+            'neige' => 0 
         ];
     }
 
     return null;
+}
+function buildPrevisionsXML($meteo) {
+    $xml = new DOMDocument('1.0','UTF-8');
+    $previsions = $xml->createElement('previsions');
+    $xml->appendChild($previsions);
+
+    // Définir les heures pour matin, midi et soir
+    $heures = [
+        'matin' => 9,  // 9h
+        'midi'  => 12, // 12h
+        'soir'  => 18  // 18h
+    ];
+
+    foreach ($heures as $periode => $hour) {
+        $echeance = $xml->createElement('echeance');
+        $echeance->setAttribute('hour', $hour);
+        $previsions->appendChild($echeance);
+
+        $temp = $xml->createElement('temperature');
+        $level = $xml->createElement('level', $meteo['temperature'] + 273.15); // convertir en Kelvin
+        $level->setAttribute('val','2m');
+        $temp->appendChild($level);
+        $echeance->appendChild($temp);
+
+        $pluie = $xml->createElement('pluie', $meteo['pluie']);
+        $echeance->appendChild($pluie);
+
+        $vent = $xml->createElement('vent_moyen');
+        $levelVent = $xml->createElement('level', $meteo['vent']);
+        $levelVent->setAttribute('val','10m');
+        $vent->appendChild($levelVent);
+        $echeance->appendChild($vent);
+
+        $risqueNeige = $xml->createElement('risque_neige', $meteo['neige'] > 0 ? 'oui' : 'non');
+        $echeance->appendChild($risqueNeige);
+    }
+
+    return $xml;
 }
 
 function afficherMeteo() {
     $ip = getClientIP();
     $geo = geolocateIP($ip);
 
-    if (!$geo) return "<p>Impossible de géolocaliser l'IP.</p>";
-
-    $meteo = getWeather($geo['lat'], $geo['lon']);
-
-    if (!$meteo) return "<p>Impossible de récupérer la météo.</p>";
-
-    $xml = new DOMDocument('1.0','UTF-8');
-    $root = $xml->createElement('Meteonancy');
-    $xml->appendChild($root);
-    foreach ($meteo as $k => $v) {
-        $root->appendChild($xml->createElement($k, htmlspecialchars($v)));
+    if (!$geo || !isNancy($geo['lat'], $geo['lon'])) {
+        $geo = [
+            'lat' => NANCY_LAT,
+            'lon' => NANCY_LON
+        ];
     }
 
+    $meteo = getWeather($geo['lat'], $geo['lon']);
+    if (!$meteo) return "<p>Impossible de récupérer la météo.</p>";
+
+$xml = buildPrevisionsXML($meteo);
+
     $xsl = new DOMDocument();
-    $xsl->load('Meteonancy.xsl'); 
+    $xsl->load('Meteonancy.xsl');
     $proc = new XSLTProcessor();
     $proc->importStylesheet($xsl);
 
