@@ -1,0 +1,110 @@
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Helvetica Neue', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+body h1{
+    text-align: center;
+    width: 100%;
+}
+
+#Meteo {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 30px;
+    margin: 30px;
+    width: 100%;
+    max-width: 1200px;
+}
+
+#Meteo div {
+    background: linear-gradient(135deg, #78b7e0, #abdce6);
+    border: 2px solid #007acc;
+    border-radius: 5px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    padding: 15px;
+    text-align: left;
+    width: 225px;
+    height: 210px;
+
+}
+
+#Meteo h3 {
+    margin: 0;
+    text-align: center;
+    font-size: 1.5em;
+}
+
+#Meteo p {
+    margin: 10px 0;
+    color: #000000;
+}
+
+#QualiteAir{
+    width: 75%;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+}
+
+#QualiteAir h3 {
+    font-size: 1.5em;
+}
+
+#Carte {
+    height: 800px; 
+    width: 800px;
+    max-width: 1200px;
+    margin-top: 30px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    border: 3px solid #ccc;
+    border-radius: 10px;
+    flex-grow: 1;
+}
+
+#Api {
+    padding: 1.5rem;
+    margin-left: auto;
+    width: 100%;
+}
+
+#Api h3 {
+    font-size: 1.5rem;
+}
+
+#Api ul {
+    list-style: none;
+}
+
+#Api li {
+    margin-bottom: 0.5em;
+}
+
+#Api a {
+    text-decoration: none;
+    font-weight: bold;
+}
+
+#Api a:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 1000px) {
+    #Carte {
+        height: 450px;
+    }
+}
+
+@media (max-width: 800px) {
+    #Carte {
+        height: 200px;
+    }
+}
